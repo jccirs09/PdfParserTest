@@ -9,12 +9,8 @@
 
   <ItemGroup>
     <PackageReference Include="MudBlazor" Version="8.*" />
+    <PackageReference Include="NReco.PdfRenderer" Version="1.6.0" />
     <PackageReference Include="Tesseract" Version="5.2.0" />
     <PackageReference Include="UglyToad.PdfPig" Version="1.7.0-custom-5" />
-  </ItemGroup>
-
-  <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
-    <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="14.8.2" />
-    <PackageReference Include="PdfiumViewer.Core" Version="1.0.4" />
   </ItemGroup>
 </Project>

@@ -18,9 +18,7 @@ builder.Services.AddRazorComponents()
 builder.Services.AddSingleton<ITextParser, PlainTextPickingListParser>();
 builder.Services.AddSingleton<IPdfParseStrategy, PdfPigStrategy>();
 builder.Services.AddSingleton<IPdfParseStrategy, PopplerStrategy>();
-#if WINDOWS
 builder.Services.AddSingleton<IPdfParseStrategy, OcrStrategy>();
-#endif
 builder.Services.AddSingleton<ParsingEngine>();
 
 builder.Services.AddHttpClient();
