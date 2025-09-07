@@ -1,6 +1,7 @@
 @page "/parser"
 @using PdfParserTest.Components.Services
 @inject PdfParsingService PdfParsingService
+@inject IJSRuntime JSRuntime
 
 <h3>PDF Parser</h3>
 
@@ -15,6 +16,7 @@
 
 @if (!string.IsNullOrEmpty(rawText))
 {
+    <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="DownloadText">Download Text</MudButton>
     <h4>Raw Text</h4>
     <pre>@rawText</pre>
 }
@@ -43,6 +45,15 @@
         {
             var filePath = System.IO.Path.Combine("Samples", selectedPdf);
             rawText = PdfParsingService.GetRawText(filePath);
+        }
+    }
+
+    private async Task DownloadText()
+    {
+        if (!string.IsNullOrEmpty(rawText))
+        {
+            var fileName = $"{System.IO.Path.GetFileNameWithoutExtension(selectedPdf)}.txt";
+            await JSRuntime.InvokeVoidAsync("downloadFile", fileName, rawText);
         }
     }
 }
