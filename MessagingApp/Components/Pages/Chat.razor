@@ -1,0 +1,64 @@
+@page "/chat"
+@using Microsoft.AspNetCore.SignalR.Client
+@using MessagingApp.Data
+@inject NavigationManager NavigationManager
+
+<MudPaper Width="100%" Style="height: 70vh; display: flex; flex-direction: column;">
+    <MudPaper Style="overflow-y: scroll; flex-grow: 1; padding: 1rem;">
+        @foreach (var message in _messages)
+        {
+            <div class="@($"d-flex flex-row my-2 {(message.IsSent ? "flex-row-reverse" : "")}")">
+                <MudText>@message.Text</MudText>
+            </div>
+        }
+    </MudPaper>
+    <MudPaper Style="padding: 1rem;">
+        <MudTextField @bind-Value="_newMessage" Label="Message" Variant="Variant.Outlined" />
+        <MudIconButton Icon="@Icons.Material.Filled.Send" OnClick="SendMessageAsync" />
+    </MudPaper>
+</MudPaper>
+
+@code {
+    private HubConnection _hubConnection = null!;
+    private List<ChatMessage> _messages = new();
+    private string _newMessage = string.Empty;
+    private ApplicationUser _currentUser = new() { Id = "user1", UserName = "Jules" };
+
+    protected override async Task OnInitializedAsync()
+    {
+        _hubConnection = new HubConnectionBuilder()
+            .WithUrl(NavigationManager.ToAbsoluteUri("/chathub"))
+            .Build();
+
+        _hubConnection.On<string, string>("ReceiveMessage", (user, message) =>
+        {
+            _messages.Add(new ChatMessage { Text = $"{user}: {message}", IsSent = user == _currentUser.UserName });
+            InvokeAsync(StateHasChanged);
+        });
+
+        await _hubConnection.StartAsync();
+    }
+
+    private async Task SendMessageAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(_newMessage))
+        {
+            await _hubConnection.SendAsync("SendMessage", _currentUser.UserName, _newMessage);
+            _newMessage = string.Empty;
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_hubConnection is not null)
+        {
+            await _hubConnection.DisposeAsync();
+        }
+    }
+
+    public class ChatMessage
+    {
+        public string Text { get; set; } = string.Empty;
+        public bool IsSent { get; set; }
+    }
+}
