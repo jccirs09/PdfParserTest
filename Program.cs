@@ -21,7 +21,10 @@ builder.Services.AddSingleton<IPdfParseStrategy, PopplerStrategy>();
 builder.Services.AddSingleton<IPdfParseStrategy, OcrStrategy>();
 builder.Services.AddSingleton<ParsingEngine>();
 
-builder.Services.AddHttpClient();
+builder.Services.AddHttpClient("API", client =>
+{
+    client.BaseAddress = new Uri("http://localhost:5100");
+});
 
 var app = builder.Build();
 

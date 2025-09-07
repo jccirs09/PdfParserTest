@@ -1,7 +1,7 @@
 @page "/parser"
 @using PdfParserTest.Models
 @using System.Net.Http.Json
-@inject HttpClient Http
+@inject IHttpClientFactory HttpClientFactory
 
 <h3>PDF Parser</h3>
 
@@ -63,11 +63,12 @@
 
         try
         {
+            var client = HttpClientFactory.CreateClient("API");
             using var content = new MultipartFormDataContent();
             using var fileContent = new StreamContent(e.File.OpenReadStream(maxAllowedSize: 1024 * 1024 * 15));
             content.Add(content: fileContent, name: "\"pdf\"", fileName: e.File.Name);
 
-            var response = await Http.PostAsync("/api/pickinglists/parse", content);
+            var response = await client.PostAsync("/api/pickinglists/parse", content);
 
             if (response.IsSuccessStatusCode)
             {
