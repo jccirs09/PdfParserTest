@@ -1,5 +1,6 @@
 using MudBlazor.Services;
 using PdfParserTest.Components;
+using PdfParserTest.Components.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +10,7 @@ builder.Services.AddMudServices();
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+builder.Services.AddTransient<PdfParsingService>();
 
 var app = builder.Build();
 
