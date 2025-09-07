@@ -1,0 +1,64 @@
+@page "/parser"
+@using PdfParserTest.Components.Models
+@using PdfParserTest.Components.Services
+@inject PdfParsingService PdfParsingService
+
+<h3>PDF Parser</h3>
+
+<MudSelect T="string" Label="Select a PDF file" @bind-Value="selectedPdf">
+    @foreach (var file in samplePdfs)
+    {
+        <MudSelectItem T="string" Value="@file">@file</MudSelectItem>
+    }
+</MudSelect>
+
+<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ParsePdf">Parse PDF</MudButton>
+
+@if (pickingList != null)
+{
+    <h4>Picking List</h4>
+    <p><strong>Order Number:</strong> @pickingList.OrderNumber</p>
+    <p><strong>Customer Name:</strong> @pickingList.CustomerName</p>
+
+    <h5>Products</h5>
+    <MudTable Items="@pickingList.Products" Hover="true" Striped="true">
+        <HeaderContent>
+            <MudTh>SKU</MudTh>
+            <MudTh>Description</MudTh>
+            <MudTh>Quantity</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="SKU">@context.Sku</MudTd>
+            <MudTd DataLabel="Description">@context.Description</MudTd>
+            <MudTd DataLabel="Quantity">@context.Quantity</MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+@code {
+    private string selectedPdf;
+    private PickingList? pickingList;
+    private List<string> samplePdfs = new List<string>();
+
+    protected override void OnInitialized()
+    {
+        var sampleFiles = System.IO.Directory.GetFiles("Samples", "*.pdf");
+        foreach (var file in sampleFiles)
+        {
+            samplePdfs.Add(System.IO.Path.GetFileName(file));
+        }
+        if(samplePdfs.Count > 0)
+        {
+            selectedPdf = samplePdfs[0];
+        }
+    }
+
+    private void ParsePdf()
+    {
+        if (!string.IsNullOrEmpty(selectedPdf))
+        {
+            var filePath = System.IO.Path.Combine("Samples", selectedPdf);
+            pickingList = PdfParsingService.ParsePickingList(filePath);
+        }
+    }
+}
