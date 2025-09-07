@@ -1,59 +1,90 @@
 @page "/parser"
-@using PdfParserTest.Components.Services
-@inject PdfParsingService PdfParsingService
-@inject IJSRuntime JSRuntime
+@using PdfParserTest.Models
+@using System.Net.Http.Json
+@inject HttpClient Http
 
 <h3>PDF Parser</h3>
 
-<MudSelect T="string" Label="Select a PDF file" @bind-Value="selectedPdf">
-    @foreach (var file in samplePdfs)
-    {
-        <MudSelectItem T="string" Value="@file">@file</MudSelectItem>
-    }
-</MudSelect>
+<InputFile OnChange="OnFileChanged" />
 
-<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ParsePdf">Parse PDF</MudButton>
-
-@if (!string.IsNullOrEmpty(rawText))
+@if (isUploading)
 {
-    <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="DownloadText">Download Text</MudButton>
-    <h4>Raw Text</h4>
-    <pre>@rawText</pre>
+    <p><em>Uploading...</em></p>
+}
+
+@if (pickingList != null)
+{
+    <h4>Picking List</h4>
+    <p><strong>Order Number:</strong> @pickingList.SalesOrderNumber</p>
+    <p><strong>Buyer:</strong> @pickingList.Buyer</p>
+    <p><strong>Ship Date:</strong> @pickingList.ShipDate?.ToShortDateString()</p>
+
+    <h5>Items</h5>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Line</th>
+                <th>Item Code</th>
+                <th>Description</th>
+                <th>Quantity</th>
+                <th>Unit</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in pickingList.Items)
+            {
+                <tr>
+                    <td>@item.LineNo</td>
+                    <td>@item.ItemCode</td>
+                    <td>@item.Description</td>
+                    <td>@item.Quantity</td>
+                    <td>@item.QuantityUnit</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@if (errorMessage != null)
+{
+    <p class="text-danger">@errorMessage</p>
 }
 
 @code {
-    private string selectedPdf;
-    private string rawText;
-    private List<string> samplePdfs = new List<string>();
+    private PickingListDto? pickingList;
+    private bool isUploading;
+    private string? errorMessage;
 
-    protected override void OnInitialized()
+    private async Task OnFileChanged(InputFileChangeEventArgs e)
     {
-        var sampleFiles = System.IO.Directory.GetFiles("Samples", "*.pdf");
-        foreach (var file in sampleFiles)
-        {
-            samplePdfs.Add(System.IO.Path.GetFileName(file));
-        }
-        if(samplePdfs.Count > 0)
-        {
-            selectedPdf = samplePdfs[0];
-        }
-    }
+        isUploading = true;
+        errorMessage = null;
+        pickingList = null;
 
-    private void ParsePdf()
-    {
-        if (!string.IsNullOrEmpty(selectedPdf))
+        try
         {
-            var filePath = System.IO.Path.Combine("Samples", selectedPdf);
-            rawText = PdfParsingService.GetRawText(filePath);
-        }
-    }
+            using var content = new MultipartFormDataContent();
+            using var fileContent = new StreamContent(e.File.OpenReadStream(maxAllowedSize: 1024 * 1024 * 15));
+            content.Add(content: fileContent, name: "\"pdf\"", fileName: e.File.Name);
 
-    private async Task DownloadText()
-    {
-        if (!string.IsNullOrEmpty(rawText))
+            var response = await Http.PostAsync("/api/pickinglists/parse", content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                pickingList = await response.Content.ReadFromJsonAsync<PickingListDto>();
+            }
+            else
+            {
+                errorMessage = $"Error uploading file: {response.ReasonPhrase}";
+            }
+        }
+        catch (Exception ex)
         {
-            var fileName = $"{System.IO.Path.GetFileNameWithoutExtension(selectedPdf)}.txt";
-            await JSRuntime.InvokeVoidAsync("downloadFile", fileName, rawText);
+            errorMessage = $"An error occurred: {ex.Message}";
+        }
+        finally
+        {
+            isUploading = false;
         }
     }
 }

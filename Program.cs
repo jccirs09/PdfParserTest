@@ -1,6 +1,10 @@
-using MudBlazor.Services;
+using Microsoft.AspNetCore.Http;
 using PdfParserTest.Components;
-using PdfParserTest.Components.Services;
+using PdfParserTest.Models;
+using PdfParserTest.Parsing;
+using PdfParserTest.Parsing.Strategies;
+using System.IO;
+using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,7 +14,16 @@ builder.Services.AddMudServices();
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
-builder.Services.AddTransient<PdfParsingService>();
+
+builder.Services.AddSingleton<ITextParser, PlainTextPickingListParser>();
+builder.Services.AddSingleton<IPdfParseStrategy, PdfPigStrategy>();
+builder.Services.AddSingleton<IPdfParseStrategy, PopplerStrategy>();
+#if WINDOWS
+builder.Services.AddSingleton<IPdfParseStrategy, OcrStrategy>();
+#endif
+builder.Services.AddSingleton<ParsingEngine>();
+
+builder.Services.AddHttpClient();
 
 var app = builder.Build();
 
@@ -30,5 +43,18 @@ app.UseAntiforgery();
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+
+app.MapPost("/api/pickinglists/parse", async (HttpRequest req, ParsingEngine engine) =>
+{
+    if (!req.HasFormContentType) return Results.BadRequest("multipart/form-data required");
+    var form = await req.ReadFormAsync();
+    var file = form.Files.GetFile("pdf");
+    if (file is null || file.Length == 0) return Results.BadRequest("No file uploaded.");
+    await using var ms = new MemoryStream();
+    await file.CopyToAsync(ms);
+    ms.Position = 0;
+    var dto = engine.Parse(ms);
+    return Results.Ok(dto);
+});
 
 app.Run();
