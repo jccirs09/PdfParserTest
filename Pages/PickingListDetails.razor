@@ -1,0 +1,58 @@
+@page "/pickinglists/{id:int}"
+@inject HttpClient Http
+@inject NavigationManager NavManager
+
+@using PickingListApp.DTOs
+
+<PageTitle>Picking List Details</PageTitle>
+
+@if (pickingList == null && !isLoading)
+{
+    <div class="alert alert-danger">Picking list not found.</div>
+}
+else if (isLoading)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <h3>Picking List Details</h3>
+    <p><strong>Sales Order:</strong> @pickingList.SalesOrderNumber</p>
+    <hr />
+
+    <h4>Header</h4>
+    <HeaderEditor PickingList="pickingList" IsReadOnly="true" />
+    <hr />
+
+    <h4>Line Items</h4>
+    <LineItemsGrid Items="pickingList.Items" IsReadOnly="true" />
+    <hr />
+
+    <button class="btn btn-secondary" @onclick="() => NavManager.NavigateTo("/")">Back to Home</button>
+}
+
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private PickingListDto? pickingList;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            pickingList = await Http.GetFromJsonAsync<PickingListDto>($"api/pickinglists/{Id}");
+        }
+        catch (Exception)
+        {
+            // Handle error (e.g., log it, show a message)
+            pickingList = null;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

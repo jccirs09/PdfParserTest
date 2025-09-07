@@ -1,0 +1,59 @@
+@using PickingListApp.DTOs
+
+@if (PickingList != null)
+{
+    <EditForm Model="PickingList">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="mb-3">
+                    <label class="form-label">Sales Order #</label>
+                    <InputText @bind-Value="PickingList.SalesOrderNumber" class="form-control" disabled="@IsReadOnly" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Buyer</label>
+                    <InputText @bind-Value="PickingList.Buyer" class="form-control" disabled="@IsReadOnly" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Job Name</label>
+                    <InputText @bind-Value="PickingList.JobName" class="form-control" disabled="@IsReadOnly" />
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="mb-3">
+                    <label class="form-label">Ship Date</label>
+                    <InputDate @bind-Value="PickingList.ShipDate" class="form-control" disabled="@IsReadOnly" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Order Date</label>
+                    <InputDate @bind-Value="PickingList.OrderDate" class="form-control" disabled="@IsReadOnly" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Print Date/Time</label>
+                    <InputDate @bind-Value="PickingList.PrintDateTime" class="form-control" type="InputDateType.DateTimeLocal" disabled="@IsReadOnly"/>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="mb-3">
+                    <label class="form-label">Purchase Order #</label>
+                    <InputText @bind-Value="PickingList.PurchaseOrderNumber" class="form-control" disabled="@IsReadOnly" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Sales Rep</label>
+                    <InputText @bind-Value="PickingList.SalesRep" class="form-control" disabled="@IsReadOnly" />
+                </div>
+                 <div class="mb-3">
+                    <label class="form-label">Ship Via</label>
+                    <InputText @bind-Value="PickingList.ShipVia" class="form-control" disabled="@IsReadOnly" />
+                </div>
+            </div>
+        </div>
+    </EditForm>
+}
+
+@code {
+    [Parameter]
+    public PickingListDto? PickingList { get; set; }
+
+    [Parameter]
+    public bool IsReadOnly { get; set; }
+}
