@@ -1,16 +1,15 @@
-@page "/review"
-@inject StateService State
+@page "/review/{id:int}"
 @inject NavigationManager NavManager
 @inject HttpClient Http
 
-@using PickingListApp.Services
 @using PickingListApp.DTOs
+@using System.Net.Http.Json
 
 <PageTitle>Review Picking List</PageTitle>
 
 @if (pickingList == null)
 {
-    <p><em>No picking list to review. Please <a href="/upload">upload</a> one first.</em></p>
+    <p><em>Loading...</em></p>
 }
 else
 {
@@ -18,17 +17,21 @@ else
     <p><strong>Sales Order:</strong> @pickingList.SalesOrderNumber</p>
     <hr />
 
-    <h4>Header</h4>
-    <HeaderEditor PickingList="pickingList" />
-    <hr />
+    <EditForm Model="pickingList" OnValidSubmit="HandleSave">
+        <DataAnnotationsValidator />
 
-    <h4>Line Items</h4>
-    <LineItemsGrid Items="pickingList.Items" />
-    <hr />
+        <h4>Header</h4>
+        <HeaderEditor PickingList="pickingList" />
+        <hr />
 
-    <div class="mt-3">
-        <button class="btn btn-primary" @onclick="HandleSave">Approve & Save</button>
-    </div>
+        <h4>Line Items</h4>
+        <LineItemsGrid Items="pickingList.Items" />
+        <hr />
+
+        <div class="mt-3">
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">Approve & Save</MudButton>
+        </div>
+    </EditForm>
 
     @if (!string.IsNullOrEmpty(errorMessage))
     {
@@ -36,35 +39,34 @@ else
             @errorMessage
         </div>
     }
-    @if (!string.IsNullOrEmpty(successMessage))
-    {
-        <div class="alert alert-success mt-3" role="alert">
-            @successMessage
-        </div>
-    }
 }
 
 
 @code {
+    [Parameter]
+    public int Id { get; set; }
+
     private PickingListDto? pickingList;
     private string? errorMessage;
-    private string? successMessage;
 
-    protected override void OnInitialized()
+    public class SaveResult { public int Id { get; set; } public string? SalesOrderNumber { get; set; } }
+
+    protected override async Task OnInitializedAsync()
     {
-        pickingList = State.CurrentPickingList;
-        if (pickingList == null)
+        try
         {
-            // NavManager.NavigateTo("/upload");
+            pickingList = await Http.GetFromJsonAsync<PickingListDto>($"api/pickinglists/{Id}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading picking list: {ex.Message}";
         }
     }
 
     private async Task HandleSave()
     {
         if (pickingList == null) return;
-
         errorMessage = null;
-        successMessage = null;
 
         try
         {
@@ -72,24 +74,16 @@ else
             if (response.IsSuccessStatusCode)
             {
                 var result = await response.Content.ReadFromJsonAsync<SaveResult>();
-                successMessage = $"Picking list {result?.SalesOrderNumber} saved successfully with ID {result?.Id}.";
                 NavManager.NavigateTo($"/pickinglists/{result?.Id}");
             }
             else
             {
-                var errorBody = await response.Content.ReadAsStringAsync();
-                errorMessage = $"Error saving: {response.ReasonPhrase}. {errorBody}";
+                errorMessage = $"Error saving: {await response.Content.ReadAsStringAsync()}";
             }
         }
         catch (Exception ex)
         {
             errorMessage = $"An unexpected error occurred: {ex.Message}";
         }
-    }
-
-    public class SaveResult
-    {
-        public int Id { get; set; }
-        public string? SalesOrderNumber { get; set; }
     }
 }

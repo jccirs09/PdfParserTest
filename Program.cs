@@ -20,7 +20,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Add custom app services
 builder.Services.AddScoped<IPickingListParser, PdfPigPickingListParser>();
 builder.Services.AddScoped<PickingListService>();
-builder.Services.AddSingleton<StateService>(); // For holding state between pages
 
 // Add API Explorer for OpenAPI
 builder.Services.AddEndpointsApiExplorer();

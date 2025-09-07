@@ -1,3 +1,4 @@
+using System.IO;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -11,7 +12,7 @@ public static class PickingListEndpoints
 {
     public static void MapPickingListEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/pickinglists");
+        var group = app.MapGroup("/api/pickinglists").DisableAntiforgery();
 
         group.MapPost("/upload", async (IFormFile file, IPickingListParser parser) =>
         {
