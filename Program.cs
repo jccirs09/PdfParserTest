@@ -3,17 +3,15 @@ using PickingListApp.Data;
 using PickingListApp.Endpoints;
 using PickingListApp.Services;
 using Microsoft.EntityFrameworkCore;
-using Syncfusion.Blazor;
+using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
-
-// Add Syncfusion services
-// TODO: Replace with a valid license key
-builder.Services.AddSyncfusionBlazor();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddMudServices();
 
 // Add EF Core DbContext
 builder.Services.AddDbContext<AppDbContext>(options =>

@@ -1,52 +1,26 @@
 @using PickingListApp.DTOs
+@using MudBlazor
 
 @if (PickingList != null)
 {
     <EditForm Model="PickingList">
-        <div class="row">
-            <div class="col-md-4">
-                <div class="mb-3">
-                    <label class="form-label">Sales Order #</label>
-                    <InputText @bind-Value="PickingList.SalesOrderNumber" class="form-control" disabled="@IsReadOnly" />
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Buyer</label>
-                    <InputText @bind-Value="PickingList.Buyer" class="form-control" disabled="@IsReadOnly" />
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Job Name</label>
-                    <InputText @bind-Value="PickingList.JobName" class="form-control" disabled="@IsReadOnly" />
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="mb-3">
-                    <label class="form-label">Ship Date</label>
-                    <InputDate @bind-Value="PickingList.ShipDate" class="form-control" disabled="@IsReadOnly" />
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Order Date</label>
-                    <InputDate @bind-Value="PickingList.OrderDate" class="form-control" disabled="@IsReadOnly" />
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Print Date/Time</label>
-                    <InputDate @bind-Value="PickingList.PrintDateTime" class="form-control" type="InputDateType.DateTimeLocal" disabled="@IsReadOnly"/>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="mb-3">
-                    <label class="form-label">Purchase Order #</label>
-                    <InputText @bind-Value="PickingList.PurchaseOrderNumber" class="form-control" disabled="@IsReadOnly" />
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Sales Rep</label>
-                    <InputText @bind-Value="PickingList.SalesRep" class="form-control" disabled="@IsReadOnly" />
-                </div>
-                 <div class="mb-3">
-                    <label class="form-label">Ship Via</label>
-                    <InputText @bind-Value="PickingList.ShipVia" class="form-control" disabled="@IsReadOnly" />
-                </div>
-            </div>
-        </div>
+        <MudGrid>
+            <MudItem xs="12" sm="6" md="4">
+                <MudTextField @bind-Value="PickingList.SalesOrderNumber" Label="Sales Order #" Disabled="@IsReadOnly" />
+                <MudTextField @bind-Value="PickingList.Buyer" Label="Buyer" Disabled="@IsReadOnly" Margin="Margin.Dense" />
+                <MudTextField @bind-Value="PickingList.JobName" Label="Job Name" Disabled="@IsReadOnly" Margin="Margin.Dense" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+                <MudDatePicker @bind-Date="PickingList.ShipDate" Label="Ship Date" Disabled="@IsReadOnly" />
+                <MudDatePicker @bind-Date="PickingList.OrderDate" Label="Order Date" Disabled="@IsReadOnly" Margin="Margin.Dense" />
+                <MudDateTimePicker @bind-Date="PickingList.PrintDateTime" Label="Print Date/Time" Disabled="@IsReadOnly" Margin="Margin.Dense" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+                <MudTextField @bind-Value="PickingList.PurchaseOrderNumber" Label="Purchase Order #" Disabled="@IsReadOnly" />
+                <MudTextField @bind-Value="PickingList.SalesRep" Label="Sales Rep" Disabled="@IsReadOnly" Margin="Margin.Dense" />
+                <MudTextField @bind-Value="PickingList.ShipVia" Label="Ship Via" Disabled="@IsReadOnly" Margin="Margin.Dense" />
+            </MudItem>
+        </MudGrid>
     </EditForm>
 }
 

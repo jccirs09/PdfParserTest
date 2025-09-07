@@ -1,43 +1,94 @@
 @using PickingListApp.DTOs
-@using Syncfusion.Blazor.Grids
+@using MudBlazor
 
-<SfGrid @ref="Grid" DataSource="@Items" Toolbar="@(IsReadOnly ? null : new List<string>() { "Add", "Edit", "Delete", "Update", "Cancel" })">
-    <GridEditSettings AllowAdding="!IsReadOnly" AllowEditing="!IsReadOnly" AllowDeleting="!IsReadOnly" Mode="EditMode.Normal"></GridEditSettings>
-    <GridColumns>
-        <GridColumn Field=@nameof(PickingListItemDto.LineNo) HeaderText="Line" IsPrimaryKey="true" TextAlign="TextAlign.Right" Width="120"></GridColumn>
-        <GridColumn Field=@nameof(PickingListItemDto.Quantity) HeaderText="Qty" Width="150"></GridColumn>
-        <GridColumn Field=@nameof(PickingListItemDto.QuantityUnit) HeaderText="Unit" Width="130" AllowEditing="false"></GridColumn>
-        <GridColumn Field=@nameof(PickingListItemDto.ItemCode) HeaderText="Item Code" Width="200"></GridColumn>
-        <GridColumn Field=@nameof(PickingListItemDto.Description) HeaderText="Description" Width="300"></GridColumn>
-        <GridColumn Field=@nameof(PickingListItemDto.WidthIn) HeaderText="Width (in)" Format="N3" Width="150" TextAlign="TextAlign.Right"></GridColumn>
-        <GridColumn Field=@nameof(PickingListItemDto.LengthIn) HeaderText="Length (in)" Format="N3" Width="150" TextAlign="TextAlign.Right"></GridColumn>
-        <GridColumn Field=@nameof(PickingListItemDto.WeightLbs) HeaderText="Weight (lbs)" Format="N2" Width="150" TextAlign="TextAlign.Right"></GridColumn>
-        <GridColumn Field=@nameof(PickingListItemDto.ProcessType) HeaderText="Process" Width="150" AllowEditing="false"></GridColumn>
-    </GridColumns>
-    <GridTemplates>
-        <DetailTemplate>
-            @{
-                var item = (context as PickingListItemDto);
-                if (item != null)
-                {
-                    <h5>Tag Details for Line @item.LineNo</h5>
-                    <SfGrid DataSource="@item.TagDetails" Toolbar="@(IsReadOnly ? null : new List<string>() { "Add", "Edit", "Delete", "Update", "Cancel" })">
-                        <GridEditSettings AllowAdding="!IsReadOnly" AllowEditing="!IsReadOnly" AllowDeleting="!IsReadOnly" Mode="EditMode.Normal"></GridEditSettings>
-                        <GridColumns>
-                            <GridColumn Field=@nameof(ItemTagDetailDto.TagNo) HeaderText="Tag #" Width="150"></GridColumn>
-                            <GridColumn Field=@nameof(ItemTagDetailDto.HeatNo) HeaderText="Heat #" Width="150"></GridColumn>
-                            <GridColumn Field=@nameof(ItemTagDetailDto.MillRef) HeaderText="Mill Ref" Width="200"></GridColumn>
-                            <GridColumn Field=@nameof(ItemTagDetailDto.Qty) HeaderText="Qty" Width="120"></GridColumn>
-                            <GridColumn Field=@nameof(ItemTagDetailDto.ThicknessIn) HeaderText="Thk (in)" Format="N5" Width="150"></GridColumn>
-                            <GridColumn Field=@nameof(ItemTagDetailDto.Size) HeaderText="Size" Width="150"></GridColumn>
-                            <GridColumn Field=@nameof(ItemTagDetailDto.Location) HeaderText="Location" Width="150"></GridColumn>
-                        </GridColumns>
-                    </SfGrid>
-                }
+@if (Items != null)
+{
+    <MudTable Items="@Items" Hover="true" CanCancelEdit="true" @ref="table"
+              RowEditPreview="BackupItem" RowEditCancel="ResetItemToOriginalValues"
+              RowEditCommit="ItemHasBeenCommitted" IsEditRowSwitchingBlocked="@IsReadOnly">
+
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Line Items</MudText>
+            <MudSpacer />
+            @if (!IsReadOnly)
+            {
+                <MudButton OnClick="@AddNewItem" Color="Color.Primary">Add Item</MudButton>
             }
-        </DetailTemplate>
-    </GridTemplates>
-</SfGrid>
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh>Line</MudTh>
+            <MudTh>Qty</MudTh>
+            <MudTh>Unit</MudTh>
+            <MudTh>Item Code</MudTh>
+            <MudTh>Description</MudTh>
+            <MudTh>Width</MudTh>
+            <MudTh>Length</MudTh>
+            <MudTh>Weight</MudTh>
+            <MudTh></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Line">@context.LineNo</MudTd>
+            <MudTd DataLabel="Qty">@context.Quantity</MudTd>
+            <MudTd DataLabel="Unit">@context.QuantityUnit</MudTd>
+            <MudTd DataLabel="ItemCode">@context.ItemCode</MudTd>
+            <MudTd DataLabel="Description">@context.Description</MudTd>
+            <MudTd DataLabel="Width">@context.WidthIn</MudTd>
+            <MudTd DataLabel="Length">@context.LengthIn</MudTd>
+            <MudTd DataLabel="Weight">@context.WeightLbs</MudTd>
+            <MudTd>
+                 <MudIconButton Icon="@Icons.Material.Filled.KeyboardArrowDown" OnClick="@(() => ShowDetails(context))" />
+            </MudTd>
+        </RowTemplate>
+        <RowEditingTemplate>
+            <MudTd DataLabel="Line"><MudNumericField @bind-Value="context.LineNo" Required /></MudTd>
+            <MudTd DataLabel="Qty"><MudNumericField @bind-Value="context.Quantity" Required /></MudTd>
+            <MudTd DataLabel="Unit"><MudTextField @bind-Value="context.QuantityUnit" Required /></MudTd>
+            <MudTd DataLabel="ItemCode"><MudTextField @bind-Value="context.ItemCode" Required /></MudTd>
+            <MudTd DataLabel="Description"><MudTextField @bind-Value="context.Description" Lines="3" /></MudTd>
+            <MudTd DataLabel="Width"><MudNumericField @bind-Value="context.WidthIn" /></MudTd>
+            <MudTd DataLabel="Length"><MudNumericField @bind-Value="context.LengthIn" /></MudTd>
+            <MudTd DataLabel="Weight"><MudNumericField @bind-Value="context.WeightLbs" /></MudTd>
+        </RowEditingTemplate>
+        <ChildRowContent>
+            @if(selectedItem != null && selectedItem.Equals(context))
+            {
+                <MudTr>
+                    <td colspan="9">
+                        <MudCard Elevation="0">
+                            <MudCardHeader>
+                                <CardHeaderContent>
+                                    <MudText Typo="Typo.h6">Tag Details</MudText>
+                                </CardHeaderContent>
+                            </MudCardHeader>
+                            <MudCardContent>
+                                <MudTable Items="@context.TagDetails" Dense="true" Hover="true" Context="tagContext">
+                                    <HeaderContent>
+                                        <MudTh>Tag #</MudTh>
+                                        <MudTh>Heat #</MudTh>
+                                        <MudTh>Mill Ref</MudTh>
+                                        <MudTh>Qty</MudTh>
+                                        <MudTh>Thickness</MudTh>
+                                        <MudTh>Size</MudTh>
+                                        <MudTh>Location</MudTh>
+                                    </HeaderContent>
+                                    <RowTemplate>
+                                        <MudTd>@tagContext.TagNo</MudTd>
+                                        <MudTd>@tagContext.HeatNo</MudTd>
+                                        <MudTd>@tagContext.MillRef</MudTd>
+                                        <MudTd>@tagContext.Qty</MudTd>
+                                        <MudTd>@tagContext.ThicknessIn</MudTd>
+                                        <MudTd>@tagContext.Size</MudTd>
+                                        <MudTd>@tagContext.Location</MudTd>
+                                    </RowTemplate>
+                                </MudTable>
+                            </MudCardContent>
+                        </MudCard>
+                    </td>
+                </MudTr>
+            }
+        </ChildRowContent>
+    </MudTable>
+}
 
 @code {
     [Parameter]
@@ -46,5 +97,53 @@
     [Parameter]
     public bool IsReadOnly { get; set; }
 
-    private SfGrid<PickingListItemDto> Grid = default!;
+    private MudTable<PickingListItemDto> table = default!;
+    private PickingListItemDto? selectedItem;
+    private PickingListItemDto? elementBeforeEdit;
+
+    private void ShowDetails(PickingListItemDto item)
+    {
+        if (selectedItem != null && selectedItem.Equals(item))
+        {
+            selectedItem = null;
+        }
+        else
+        {
+            selectedItem = item;
+        }
+    }
+
+    private void AddNewItem()
+    {
+        var newLineNo = (Items?.Count ?? 0) + 1;
+        var newItem = new PickingListItemDto { LineNo = newLineNo, QuantityUnit = "PCS" };
+        Items?.Add(newItem);
+        table.SetEditingItem(newItem);
+    }
+
+    private void BackupItem(object item)
+    {
+        elementBeforeEdit = new()
+        {
+            LineNo = ((PickingListItemDto)item).LineNo,
+            Quantity = ((PickingListItemDto)item).Quantity,
+            ItemCode = ((PickingListItemDto)item).ItemCode,
+            Description = ((PickingListItemDto)item).Description
+        };
+    }
+
+    private void ItemHasBeenCommitted(object item)
+    {
+        // In a real app, you might have logic here. For now, the binding handles the update.
+    }
+
+    private void ResetItemToOriginalValues(object item)
+    {
+        if (elementBeforeEdit == null) return;
+        var dto = (PickingListItemDto)item;
+        dto.LineNo = elementBeforeEdit.LineNo;
+        dto.Quantity = elementBeforeEdit.Quantity;
+        dto.ItemCode = elementBeforeEdit.ItemCode;
+        dto.Description = elementBeforeEdit.Description;
+    }
 }
