@@ -13,7 +13,7 @@
             <MudItem xs="12" sm="6" md="4">
                 <MudDatePicker @bind-Date="PickingList.ShipDate" Label="Ship Date" Disabled="@IsReadOnly" />
                 <MudDatePicker @bind-Date="PickingList.OrderDate" Label="Order Date" Disabled="@IsReadOnly" Margin="Margin.Dense" />
-                <MudDateTimePicker @bind-Date="PickingList.PrintDateTime" Label="Print Date/Time" Disabled="@IsReadOnly" Margin="Margin.Dense" />
+                <MudTextField T="DateTime?" @bind-Value="PickingList.PrintDateTime" Label="Print Date/Time" Disabled="@IsReadOnly" Margin="Margin.Dense" Format="s" />
             </MudItem>
             <MudItem xs="12" sm="6" md="4">
                 <MudTextField @bind-Value="PickingList.PurchaseOrderNumber" Label="Purchase Order #" Disabled="@IsReadOnly" />
