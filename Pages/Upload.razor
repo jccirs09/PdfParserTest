@@ -1,0 +1,86 @@
+@page "/upload"
+@inject HttpClient Http
+@inject StateService State
+@inject NavigationManager NavManager
+
+@using Microsoft.AspNetCore.Components.Forms
+@using PickingListApp.Services
+@using PickingListApp.DTOs
+
+<PageTitle>Upload Picking List</PageTitle>
+
+<h1>Upload Picking List</h1>
+
+<p>Select a PDF file to parse.</p>
+
+<label>
+    Upload PDF:
+    <InputFile OnChange="HandleFileSelected" accept=".pdf" />
+</label>
+
+@if (isUploading)
+{
+    <p><em>Uploading and parsing...</em></p>
+}
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger" role="alert">
+        @errorMessage
+    </div>
+}
+
+@code {
+    private bool isUploading;
+    private string? errorMessage;
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        isUploading = true;
+        errorMessage = null;
+
+        var file = e.File;
+        if (file == null)
+        {
+            isUploading = false;
+            return;
+        }
+
+        if (file.ContentType != "application/pdf")
+        {
+            errorMessage = "Please select a valid PDF file.";
+            isUploading = false;
+            return;
+        }
+
+        try
+        {
+            using var content = new MultipartFormDataContent();
+            using var fileContent = new StreamContent(file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024)); // 10 MB limit
+            fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/pdf");
+            content.Add(fileContent, "file", file.Name);
+
+            var response = await Http.PostAsync("api/pickinglists/upload", content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var parsedList = await response.Content.ReadFromJsonAsync<PickingListDto>();
+                State.CurrentPickingList = parsedList;
+                NavManager.NavigateTo("/review");
+            }
+            else
+            {
+                var errorBody = await response.Content.ReadAsStringAsync();
+                errorMessage = $"Error uploading file: {response.ReasonPhrase}. {errorBody}";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An unexpected error occurred: {ex.Message}";
+        }
+        finally
+        {
+            isUploading = false;
+        }
+    }
+}
